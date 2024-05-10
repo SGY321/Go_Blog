@@ -8,6 +8,7 @@ import (
 	"text/template"
 	"unicode/utf8"
 
+	_ "github.com/go-sql-driver/mysql" //匿名导入
 	"github.com/gorilla/mux"
 )
 
