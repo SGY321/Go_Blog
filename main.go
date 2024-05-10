@@ -44,6 +44,7 @@ func initDB() {
 	checkError(err)
 
 }
+
 func checkError(err error) {
 	if err != nil {
 		log.Fatal(err)
@@ -172,8 +173,22 @@ func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 创建articles表
+func createTables() {
+	createArticlesSQL := `
+		CREATE TABLE IF NOT EXISTS articles(
+			id bigint(20) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+			title varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+			body longtext COLLATE utf8mb4_unicode_ci
+		);
+	`
+	_, err := db.Exec(createArticlesSQL)
+	checkError(err)
+}
+
 func main() {
-	initDB() //初始化数据库
+	initDB()       //初始化数据库
+	createTables() //创建表articles
 
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
