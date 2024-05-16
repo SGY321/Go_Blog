@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"goblog/pkg/route"
 	"log"
 	"net/http"
 	"net/url"
@@ -16,7 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var router = mux.NewRouter()
+var router *mux.Router
 
 var db *sql.DB
 
@@ -81,16 +82,6 @@ func (a Article) Link() string {
 	return showURL.String()
 }
 
-// 通过路由来获取 URL
-func RouteName2URL(routeName string, pairs ...string) string {
-	url, err := router.Get(routeName).URL(pairs...)
-	if err != nil {
-		checkError(err)
-		return ""
-	}
-	return url.String()
-}
-
 // 将 int64 转为 string
 func Int64ToString(num int64) string {
 	return strconv.FormatInt(num, 10)
@@ -112,12 +103,6 @@ func (a Article) Delete() (rowsAffected int64, err error) {
 	return 0, nil
 }
 
-// 得到路由参数
-func getRouteVariable(parameterName string, r *http.Request) string {
-	vars := mux.Vars(r)
-	return vars[parameterName]
-}
-
 // 得到文章通过 ID
 func getArticleByID(id string) (Article, error) {
 	article := Article{}
@@ -131,7 +116,7 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 	//1. 获取 URL 参数
 	// vars := mux.Vars(r) // 从HTTP请求中获取路由参数的值
 	// id := vars["id"]
-	id := getRouteVariable("id", r)
+	id := route.GetRouteVariable("id", r)
 
 	//2. 读取对应的文章数据
 	// article := Article{}
@@ -156,7 +141,7 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 		//4. 读取成功
 		// tmpl, err := template.ParseFiles("resources/views/articles/show.gohtml") // 加载模板文件show.gohtml,后缀名也可以是,tmpl
 		tmpl, err := template.New("show.gohtml").Funcs(template.FuncMap{
-			"RouteName2URL": RouteName2URL,
+			"RouteName2URL": route.Name2URL,
 			"Int64ToString": Int64ToString,
 		}).ParseFiles("resources/views/articles/show.gohtml")
 
@@ -171,7 +156,7 @@ func articlesEditHandler(w http.ResponseWriter, r *http.Request) {
 	//1. 获取 URL 参数
 	// vars := mux.Vars(r) // 从HTTP请求中获取路由参数的值
 	// id := vars["id"]
-	id := getRouteVariable("id", r)
+	id := route.GetRouteVariable("id", r)
 
 	//2. 读取对应的文章数据
 	// article := Article{}
@@ -233,7 +218,7 @@ func validateArticleFormData(title string, body string) map[string]string {
 // 更新文章显示结果
 func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	//1. 获取 URL 参数
-	id := getRouteVariable("id", r)
+	id := route.GetRouteVariable("id", r)
 
 	//2. 读取对应的文章数据
 	_, err := getArticleByID(id)
@@ -410,7 +395,7 @@ func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. 获取 URL 参数
-	id := getRouteVariable("id", r)
+	id := route.GetRouteVariable("id", r)
 
 	// 2. 读取对应的文章数据
 	article, err := getArticleByID(id)
@@ -543,6 +528,9 @@ func createTables() {
 func main() {
 	initDB()       //初始化数据库
 	createTables() //创建表articles
+
+	route.Initialize()
+	router = route.Router
 
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
