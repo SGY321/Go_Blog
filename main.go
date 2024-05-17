@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+
 	"goblog/pkg/database"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
@@ -21,18 +22,18 @@ var router *mux.Router
 
 var db *sql.DB
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "<h1>Hello,欢迎来到happyBlog</h1>")
-}
+// func homeHandler(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprint(w, "<h1>Hello,欢迎来到happyBlog</h1>")
+// }
 
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "此博客是用以记录编程笔记，其余问题请自行"+"<a href=\"www.baidu.com\">百度一下</a>")
-}
+// func aboutHandler(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprint(w, "此博客是用以记录编程笔记，其余问题请自行"+"<a href=\"www.baidu.com\">百度一下</a>")
+// }
 
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(w, "<h1>请求页面未找到:(</h><p>如有疑惑，请联系我们。</p>)")
-}
+// func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.WriteHeader(http.StatusNotFound)
+// 	fmt.Fprint(w, "<h1>请求页面未找到:(</h><p>如有疑惑，请联系我们。</p>)")
+// }
 
 // Article 对应一条文章数据
 type Article struct {
@@ -482,9 +483,6 @@ func main() {
 	route.Initialize()
 	router = route.Router
 
-	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
-	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
-
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store") // 保存表单数据的路由
 
@@ -494,9 +492,6 @@ func main() {
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("POST").Name("articles.update")
 	router.HandleFunc("/articles/{id:[0-9]+}/edit", articlesEditHandler).Methods("GET").Name("articles.edit")
 	router.HandleFunc("/articles/{id:[0-9]+}/delete", articlesDeleteHandler).Methods("POST").Name("articles.delete")
-
-	//自定义 404 页面
-	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 
 	// 中间件：强制内容类型为 HTML
 	router.Use(forceHTMLMiddleware)
