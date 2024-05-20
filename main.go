@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"goblog/bootstrap"
 	"goblog/pkg/database"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
@@ -67,6 +68,12 @@ func (a Article) Delete() (rowsAffected int64, err error) {
 	return 0, nil
 }
 
+// getRouteVariable 得到路由参数
+func getRouteVariable(parameterName string, r *http.Request) string {
+	vars := mux.Vars(r)
+	return vars[parameterName]
+}
+
 // 得到文章通过 ID
 func getArticleByID(id string) (Article, error) {
 	article := Article{}
@@ -80,7 +87,7 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 	//1. 获取 URL 参数
 	// vars := mux.Vars(r) // 从HTTP请求中获取路由参数的值
 	// id := vars["id"]
-	id := route.GetRouteVariable("id", r)
+	id := getRouteVariable("id", r)
 
 	//2. 读取对应的文章数据
 	// article := Article{}
@@ -120,7 +127,7 @@ func articlesEditHandler(w http.ResponseWriter, r *http.Request) {
 	//1. 获取 URL 参数
 	// vars := mux.Vars(r) // 从HTTP请求中获取路由参数的值
 	// id := vars["id"]
-	id := route.GetRouteVariable("id", r)
+	id := getRouteVariable("id", r)
 
 	//2. 读取对应的文章数据
 	// article := Article{}
@@ -182,7 +189,7 @@ func validateArticleFormData(title string, body string) map[string]string {
 // 更新文章显示结果
 func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	//1. 获取 URL 参数
-	id := route.GetRouteVariable("id", r)
+	id := getRouteVariable("id", r)
 
 	//2. 读取对应的文章数据
 	_, err := getArticleByID(id)
@@ -359,7 +366,7 @@ func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. 获取 URL 参数
-	id := route.GetRouteVariable("id", r)
+	id := getRouteVariable("id", r)
 
 	// 2. 读取对应的文章数据
 	article, err := getArticleByID(id)
@@ -480,15 +487,13 @@ func main() {
 	database.Initialize()
 	db = database.DB
 
-	route.Initialize()
-	router = route.Router
+	router = bootstrap.SetupRoute()
 
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store") // 保存表单数据的路由
 
 	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
 
-	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("POST").Name("articles.update")
 	router.HandleFunc("/articles/{id:[0-9]+}/edit", articlesEditHandler).Methods("GET").Name("articles.edit")
 	router.HandleFunc("/articles/{id:[0-9]+}/delete", articlesDeleteHandler).Methods("POST").Name("articles.delete")
