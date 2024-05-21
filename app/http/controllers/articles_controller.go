@@ -17,7 +17,7 @@ type ArticlesController struct {
 }
 
 // Show 文章详情页面
-func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
+func (ac *ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 	//1. 获取 URL 参数
 	// vars := mux.Vars(r) // 从HTTP请求中获取路由参数的值
 	// id := vars["id"]
@@ -52,6 +52,27 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 
 		logger.LogError(err)
 		err = tmpl.Execute(w, article)
+		logger.LogError(err)
+	}
+}
+
+// 访问文章列表
+func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request) { // 前面已经声明了一个ac *ArticlesController，此处不用
+	// 1. 执行查询语句，返回一个结果集
+	articles, err := article.GetAll()
+
+	if err != nil {
+		// 数据库错误
+		logger.LogError(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "500 服务器内部错误")
+	} else {
+		// 2. 加载模板
+		tmpl, err := template.ParseFiles("resources/views/articles/index.gohtml")
+		logger.LogError(err)
+
+		// 3. 渲染模板，将所有文章的数据传输进去
+		err = tmpl.Execute(w, articles)
 		logger.LogError(err)
 	}
 }
