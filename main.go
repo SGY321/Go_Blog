@@ -7,8 +7,6 @@ import (
 	"goblog/bootstrap"
 	"goblog/pkg/database"
 	"goblog/pkg/logger"
-	"goblog/pkg/route"
-	"goblog/pkg/types"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -70,46 +68,6 @@ func getArticleByID(id string) (Article, error) {
 	query := "SELECT * FROM articles WHERE id = ?"
 	err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
 	return article, err
-}
-
-// 显示对应 ID 的文章
-func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
-	//1. 获取 URL 参数
-	// vars := mux.Vars(r) // 从HTTP请求中获取路由参数的值
-	// id := vars["id"]
-	id := getRouteVariable("id", r)
-
-	//2. 读取对应的文章数据
-	// article := Article{}
-	// query := "SELECT * FROM articles WHERE id = ?"
-	// err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
-	//QueryRow() 来读取单条数据；Scan() 将查询结果赋值到我们的 article struct 中，传参应与数据表字段的顺序保持一致。
-	article, err := getArticleByID(id)
-
-	//3 如果出现错误
-	if err != nil {
-		if err == sql.ErrNoRows { //Scan() 发现没有返回数据的话，会返回 sql.ErrNoRows 类型的错误
-			//3.1 数据未找到
-			w.WriteHeader(404) //http.StatusNotFound
-			fmt.Fprint(w, "404 文章未找到")
-		} else {
-			//3.2 数据库错误
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-	} else {
-		//4. 读取成功
-		// tmpl, err := template.ParseFiles("resources/views/articles/show.gohtml") // 加载模板文件show.gohtml,后缀名也可以是,tmpl
-		tmpl, err := template.New("show.gohtml").Funcs(template.FuncMap{
-			"RouteName2URL": route.Name2URL,
-			"Int64ToString": types.Int64ToString,
-		}).ParseFiles("resources/views/articles/show.gohtml")
-
-		logger.LogError(err)
-		err = tmpl.Execute(w, article)
-		logger.LogError(err)
-	}
 }
 
 // 编辑文章并提交更新
@@ -267,60 +225,6 @@ type ArticlesFormData struct {
 	Errors      map[string]string
 }
 
-func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-
-	title := r.PostFormValue("title")
-	body := r.PostFormValue("body")
-	errors := validateArticleFormData(title, body)
-
-	// errors := make(map[string]string) //创建键值对string:string赋给errors
-
-	// // 验证标题
-	// if title == "" {
-	// 	errors["title"] = "标题不能为空"
-	// } else if utf8.RuneCountInString(title) < 3 || len(title) > 40 {
-	// 	errors["title"] = "标题长度需介于 3-40"
-	// }
-
-	// // 验证内容
-	// if body == "" {
-	// 	errors["body"] = "内容不能为空"
-	// } else if utf8.RuneCountInString(body) < 10 {
-	// 	errors["body"] = "内容长度需大于或等于 10 个字节"
-	// }
-
-	// 检查是否有错误
-	if len(errors) == 0 {
-		lastInsertID, err := saveArticleToDB(title, body) //保存至数据库
-		if lastInsertID > 0 {
-			fmt.Fprint(w, "插入成功，ID为"+strconv.FormatInt(lastInsertID, 10))
-		} else {
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-	} else {
-
-		storeURL, _ := router.Get("articles.store").URL()
-
-		data := ArticlesFormData{
-			Title:  title,
-			Body:   body,
-			URL:    storeURL,
-			Errors: errors,
-		}
-		tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml") // 加载模板文件,后缀名也可以是,tmpl
-		if err != nil {
-			panic(err)
-		}
-
-		err = tmpl.Execute(w, data)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
 // 删除文章
 func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -366,40 +270,6 @@ func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// 保存数据至数据库
-func saveArticleToDB(title string, body string) (int64, error) {
-	//变量初始化
-	var (
-		id   int64
-		err  error
-		rs   sql.Result
-		stmt *sql.Stmt
-	)
-
-	//1.获取一个prepare声明语句，防止sql注入
-	stmt, err = db.Prepare("INSERT INTO articles (title,body) VALUES(?,?)")
-	//例行的错误检测
-	if err != nil {
-		return 0, err
-	}
-
-	//2. 在此函数运行结束后关闭此语句，防止占用SQL连接
-	defer stmt.Close()
-
-	//3. 执行请求，传参进入绑定的内容
-	rs, err = stmt.Exec(title, body)
-	if err != nil {
-		return 0, err
-	}
-
-	//4. 插入成功的话，会返回自增 ID
-	if id, err = rs.LastInsertId(); id > 0 {
-		return id, nil
-	}
-
-	return 0, err
-}
-
 func forceHTMLMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//1.设置标头
@@ -421,37 +291,12 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 	})
 }
 
-func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
-
-	storeURL, _ := router.Get("articles.store").URL()
-
-	data := ArticlesFormData{
-		Title:  "",
-		Body:   "",
-		URL:    storeURL,
-		Errors: nil,
-	}
-	tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-	if err != nil {
-		panic(err)
-	}
-
-	err = tmpl.Execute(w, data)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func main() {
 	database.Initialize()
 	db = database.DB
 
 	bootstrap.SetupDB()
 	router = bootstrap.SetupRoute()
-
-	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store") // 保存表单数据的路由
-
-	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
 
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("POST").Name("articles.update")
 	router.HandleFunc("/articles/{id:[0-9]+}/edit", articlesEditHandler).Methods("GET").Name("articles.edit")

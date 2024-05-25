@@ -22,4 +22,8 @@ func RegisterWebRoutes(r *mux.Router) {
 
 	//显示所有的文章
 	r.HandleFunc("/articles", ac.Index).Methods("GET").Name("articles.index")
+
+	// RegisterWebRoutes 注册网页相关路由
+	r.HandleFunc("/articles", ac.Store).Methods("POST").Name("articles.store") // 保存表单数据的路由
+	r.HandleFunc("/articles/create", ac.Create).Methods("GET").Name("articles.create")
 }
