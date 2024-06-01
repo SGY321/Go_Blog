@@ -2,23 +2,13 @@ body {
     background-image: url('bk1.gif');
     background-size: cover;
     background-position: center;
-    background-repeat: no-repeat;
-    animation: animatedBackground 10s infinite;
+    background-attachment: fixed; /* 可以使背景图固定不滚动 */
     overflow-x: hidden;
-
 }
 
-@keyframes animatedBackground {
-    0% {
-        background-position: 0% 0%;
-    }
-    100% {
-        background-position: 100% 100%;
-    }
-}
-
-.overlay-background {
+.upper-background {
     position: relative;
+    background-image: url('bk2.gif');
     top: 0;
     left: 0;
     width: 66%;
@@ -26,5 +16,5 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    max-width: 100%;
+    max-width: 100%; /* 防止背景图重复 */
 }
