@@ -9,6 +9,6 @@ type BaseModel struct {
 }
 
 // 获取 ID 的字符串格式
-func (bm BaseModel) GetStringID() string {
-	return types.Uint64ToString(bm.ID)
+func (a BaseModel) GetStringID() string {
+	return types.Uint64ToString(a.ID)
 }
