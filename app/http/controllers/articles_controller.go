@@ -5,9 +5,8 @@ import (
 	"goblog/app/models/article"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
-	"goblog/pkg/types"
+	"goblog/pkg/view"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"text/template"
 	"unicode/utf8"
@@ -27,10 +26,6 @@ func (ac *ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 	id := route.GetRouteVariable("id", r)
 
 	//2. 读取对应的文章数据
-	// article := Article{}
-	// query := "SELECT * FROM articles WHERE id = ?"
-	// err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
-	//QueryRow() 来读取单条数据；Scan() 将查询结果赋值到我们的 article struct 中，传参应与数据表字段的顺序保持一致。
 	article, err := article.Get(id)
 
 	//3 如果出现错误
@@ -49,26 +44,7 @@ func (ac *ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 		//4. 读取成功，显示文章
 
 		// 4.0 设置模板相对路径
-		viewDir := "resources/views"
-
-		// 4.1 所有布局模板文件 Slice
-		files, err := filepath.Glob(viewDir + "/layouts/*.gohtml")
-		logger.LogError(err)
-
-		// 4.2 在 Slice 里新增我们的目标文件
-		newFiles := append(files, viewDir+"/articles/show.gohtml")
-
-		// 4.3 解析模板文件
-		tmpl, err := template.New("show.gohtml").
-			Funcs(template.FuncMap{
-				"RouteName2URL":  route.Name2URL,
-				"Uint64ToString": types.Uint64ToString,
-			}).ParseFiles(newFiles...)
-		logger.LogError(err)
-
-		// 4.4 渲染模板， 将所有文章的数据传输进去
-		err = tmpl.ExecuteTemplate(w, "app", article)
-		logger.LogError(err)
+		view.Render(w, "articles.show", article)
 
 	}
 }
@@ -87,22 +63,7 @@ func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request) { // �
 		// -- 2. 加载模板 --
 
 		// 2.0 设置模板相对路径
-		viewDir := "resources/views"
-
-		// 2.1 所有布局模板文件 Slice
-		files, err := filepath.Glob(viewDir + "/layouts/*.gohtml")
-		logger.LogError(err)
-
-		// 2.2 在 Slice 里新增我们的目标文件
-		newFiles := append(files, viewDir+"/articles/index.gohtml")
-
-		// 2.3 解析模板文件
-		tmpl, err := template.ParseFiles(newFiles...)
-		logger.LogError(err)
-
-		// 2.4 渲染模板，将所有文章的数据传输进去
-		err = tmpl.ExecuteTemplate(w, "app", articles)
-		logger.LogError(err)
+		view.Render(w, "articles.index", articles)
 
 	}
 }
