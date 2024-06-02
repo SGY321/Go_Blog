@@ -195,7 +195,6 @@ func (*ArticlesController) Edit(w http.ResponseWriter, r *http.Request) {
 
 	// 2. 获取对应的文章数据
 	_article, err := article.Get(id)
-	_article, err := article.Get(id)
 
 	// 3. 如果出现错误
 	if err != nil {
