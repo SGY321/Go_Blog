@@ -44,6 +44,7 @@ func (ac *ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 
 		// 4.0 设置模板相对路径
 		view.Render(w, article, "articles.show")
+		view.Render(w, article, "articles.show")
 
 	}
 }
@@ -62,6 +63,7 @@ func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request) { // �
 		// -- 2. 加载模板 --
 
 		// 2.0 设置模板相对路径
+		view.Render(w, articles, "articles.index")
 		view.Render(w, articles, "articles.index")
 
 	}
@@ -193,12 +195,14 @@ func (*ArticlesController) Edit(w http.ResponseWriter, r *http.Request) {
 
 	// 2. 获取对应的文章数据
 	_article, err := article.Get(id)
+	_article, err := article.Get(id)
 
 	// 3. 如果出现错误
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			//3.1 数据未找到
 			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "404 文章未找到")
 			fmt.Fprint(w, "404 文章未找到")
 		} else {
 			//3.2 数据库错误
