@@ -32,7 +32,7 @@ func TestAllPages(t *testing.T) {
 
 	// 2. 遍历所有测试
 	for _, test := range tests {
-		t.Logf("当前请求 URL ：%v \n", test.url)
+		t.Logf("当前请求 URL :%v \n", test.url)
 		var (
 			resp *http.Response
 			err  error
