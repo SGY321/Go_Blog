@@ -15,6 +15,7 @@ require (
 	github.com/gorilla/sessions v1.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
 )
 
 require (
