@@ -43,7 +43,10 @@ func (ac *ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 		//4. 读取成功，显示文章
 
 		// 4.0 设置模板相对路径
-		view.Render(w, article, "articles.show")
+		// view.Render(w, article, "articles.show")
+		view.Render(w, view.D{
+			"Article": article,
+		}, "articles.show")
 	}
 }
 
@@ -61,7 +64,9 @@ func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request) { // �
 		// -- 2. 加载模板 --
 
 		// 2.0 设置模板相对路径
-		view.Render(w, articles, "articles.index")
+		view.Render(w, view.D{
+			"Articles": articles,
+		}, "articles.index")
 
 	}
 }
