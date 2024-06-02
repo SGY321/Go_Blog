@@ -4,6 +4,7 @@ package view
 import (
 	"goblog/pkg/auth"
 	"goblog/pkg/flash"
+
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
 	"html/template"

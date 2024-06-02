@@ -8,11 +8,12 @@ import (
 )
 
 // Article 文章模型
+// Article 文章模型
 type Article struct {
 	models.BaseModel
 
-	Title string
-	Body  string
+	Title string `gorm:"type:varchar(255);not null;" valid:"title"`
+	Body  string `gorm:"type:longtext;not null;" valid:"body"`
 }
 
 // 为 Article 添加一个 Link 方法，生成文章的链接
